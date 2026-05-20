@@ -9,7 +9,7 @@ import pytest
 import argparse
 import sys
 from unittest.mock import patch, MagicMock
-from io import StringIO
+from io import BytesIO, StringIO, TextIOWrapper
 
 
 class TestParseCliArgs:
@@ -326,7 +326,27 @@ class TestPrintStartupBanner:
         print(f"Captured output contains '/health': {'/health' in captured.out}")
         
         assert "/health" in captured.out
+    
+    def test_banner_prints_on_cp949_console(self, monkeypatch):
+        """
+        What it does: Verifies that the startup banner can be encoded by Windows CP949 consoles.
+        Purpose: Prevent startup crashes on Korean Windows terminals before Uvicorn starts.
+        """
+        print("Setup: Importing print_startup_banner and creating CP949 stdout...")
+        from main import print_startup_banner
 
+        buffer = BytesIO()
+        cp949_stdout = TextIOWrapper(buffer, encoding="cp949")
+
+        print("Action: Calling print_startup_banner with CP949 stdout...")
+        monkeypatch.setattr(sys, "stdout", cp949_stdout)
+        print_startup_banner("127.0.0.1", 18000)
+        cp949_stdout.flush()
+
+        output = buffer.getvalue().decode("cp949")
+        print("Verification: Banner encoded and contains server URL...")
+        assert "127.0.0.1:18000" in output
+        assert "Kiro Gateway" in output
 
 class TestCliHelp:
     """Tests for CLI help output."""
