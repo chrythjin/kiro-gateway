@@ -903,12 +903,15 @@ class KiroAuthManager:
             try:
                 await self._refresh_token_request()
             except httpx.HTTPStatusError as e:
-                # Graceful degradation for SQLite mode when refresh fails twice
-                # This happens when kiro-cli refreshed tokens in memory without persisting
-                if e.response.status_code == 400 and self._sqlite_db:
+                # Graceful degradation for SQLite mode when refresh fails.
+                # 400 happens when kiro-cli refreshed tokens in memory without persisting.
+                # 429 happens when the desktop refresh endpoint throttles, while the
+                # SQLite access token may still be valid because kiro-cli refreshed it.
+                if e.response.status_code in (400, 429) and self._sqlite_db:
                     logger.warning(
-                        "Token refresh failed with 400 after SQLite reload. "
-                        "This may happen if kiro-cli refreshed tokens in memory without persisting."
+                        f"Token refresh failed with {e.response.status_code} after SQLite reload. "
+                        "This may happen if kiro-cli refreshed tokens in memory without persisting "
+                        "or the refresh endpoint temporarily throttled the request."
                     )
                     # Check if access_token is still usable
                     if self._access_token and not self.is_token_expired():

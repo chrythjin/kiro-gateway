@@ -367,6 +367,84 @@ class TestKiroAuthManagerGetAccessToken:
             mock_client.post.assert_not_called()
     
     @pytest.mark.asyncio
+    async def test_get_access_token_uses_valid_sqlite_token_when_refresh_is_throttled(self, temp_sqlite_db):
+        """
+        What it does: Verifies SQLite token fallback when refresh is throttled.
+        Purpose: Ensure startup can continue if Kiro CLI refreshed the access token but refreshToken is rate-limited.
+        """
+        print("Setup: Creating KiroAuthManager from SQLite with a token inside refresh threshold...")
+        manager = KiroAuthManager(sqlite_db=temp_sqlite_db)
+        manager._access_token = "valid_sqlite_access_token"
+        manager._expires_at = datetime.now(timezone.utc) + timedelta(seconds=TOKEN_REFRESH_THRESHOLD - 60)
+        manager._client_id = None
+        manager._client_secret = None
+        manager._auth_type = AuthType.KIRO_DESKTOP
+        throttled_response = httpx.Response(
+            status_code=429,
+            request=httpx.Request("POST", "https://prod.us-east-1.auth.desktop.kiro.dev/refreshToken"),
+        )
+        throttled_error = httpx.HTTPStatusError(
+            "429 Too Many Requests",
+            request=throttled_response.request,
+            response=throttled_response,
+        )
+        reload_call_count = 0
+
+        def keep_near_expiry_sqlite_token(_db_path: str) -> None:
+            nonlocal reload_call_count
+            reload_call_count += 1
+            manager._access_token = "valid_sqlite_access_token"
+            manager._expires_at = datetime.now(timezone.utc) + timedelta(seconds=TOKEN_REFRESH_THRESHOLD - 60)
+
+        print("Setup: Mocking SQLite reload and throttled refresh request...")
+        with patch.object(manager, "_load_credentials_from_sqlite", side_effect=keep_near_expiry_sqlite_token), \
+             patch.object(manager, "_refresh_token_request", AsyncMock(side_effect=throttled_error)) as mock_refresh:
+            print("Action: Requesting access token...")
+            token = await manager.get_access_token()
+
+            print("Verification: Existing valid SQLite token is returned despite 429 refresh failure...")
+            assert token == "valid_sqlite_access_token"
+            assert reload_call_count == 1
+            mock_refresh.assert_awaited_once()
+    
+    @pytest.mark.asyncio
+    async def test_get_access_token_raises_when_sqlite_token_expired_and_refresh_is_throttled(self, temp_sqlite_db):
+        """
+        What it does: Verifies expired SQLite token is not reused after refresh throttling.
+        Purpose: Ensure fallback never returns an access token that is already expired.
+        """
+        print("Setup: Creating KiroAuthManager from SQLite with expired token...")
+        manager = KiroAuthManager(sqlite_db=temp_sqlite_db)
+        manager._access_token = "expired_sqlite_access_token"
+        manager._expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+        manager._client_id = None
+        manager._client_secret = None
+        manager._auth_type = AuthType.KIRO_DESKTOP
+        throttled_response = httpx.Response(
+            status_code=429,
+            request=httpx.Request("POST", "https://prod.us-east-1.auth.desktop.kiro.dev/refreshToken"),
+        )
+        throttled_error = httpx.HTTPStatusError(
+            "429 Too Many Requests",
+            request=throttled_response.request,
+            response=throttled_response,
+        )
+
+        def keep_expired_sqlite_token(_db_path: str) -> None:
+            manager._access_token = "expired_sqlite_access_token"
+            manager._expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+
+        print("Setup: Mocking SQLite reload and throttled refresh request...")
+        with patch.object(manager, "_load_credentials_from_sqlite", side_effect=keep_expired_sqlite_token), \
+             patch.object(manager, "_refresh_token_request", AsyncMock(side_effect=throttled_error)):
+            print("Action: Requesting access token...")
+            with pytest.raises(ValueError) as exc_info:
+                await manager.get_access_token()
+
+            print("Verification: Expired token is rejected...")
+            assert "Token expired and refresh failed" in str(exc_info.value)
+    
+    @pytest.mark.asyncio
     async def test_get_access_token_thread_safety(self, valid_kiro_token, mock_kiro_token_response):
         """
         What it does: Verifies thread safety via asyncio.Lock.
