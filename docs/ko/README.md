@@ -105,6 +105,36 @@ python main.py --port 9000
 
 서버는 `http://localhost:8000`에서 사용 가능합니다
 
+### OpenCode 자동 시작
+
+OpenCode에서 이 게이트웨이를 사용할 때는 아래 헬퍼를 통해 OpenCode를 실행하면 됩니다. 게이트웨이가 자동으로 백그라운드에서 시작되고, 프로세스가 종료되거나 PC가 종료될 때까지 유지됩니다:
+
+```bash
+python scripts/ensure_gateway.py -- opencode
+```
+
+이 헬퍼는 OpenCode 실행 전마다 호출해도 안전합니다:
+
+- `http://127.0.0.1:8000/health`가 이미 정상 응답하면 중복 서버를 시작하지 않습니다.
+- 게이트웨이가 실행 중이 아니면 `python main.py --host 127.0.0.1 --port 8000`을 분리된 백그라운드 프로세스로 시작합니다.
+- 런타임 파일은 프로젝트의 `.kiro-gateway/` 아래에 저장되며 Git에는 포함되지 않습니다.
+
+매번 자동으로 사용하려면 셸 alias를 추가하세요:
+
+```bash
+alias opencode-kiro='cd /path/to/kiro-gateway && python scripts/ensure_gateway.py -- opencode'
+```
+
+게이트웨이 경로, 호스트, 포트를 바꾸려면 다음처럼 지정할 수 있습니다:
+
+```bash
+python /path/to/kiro-gateway/scripts/ensure_gateway.py \
+  --gateway-dir /path/to/kiro-gateway \
+  --host 127.0.0.1 \
+  --port 9000 \
+  -- opencode
+```
+
 ---
 
 ## ⚙️ 설정

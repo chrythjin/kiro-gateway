@@ -217,8 +217,18 @@ BASE_RETRY_DELAY: float = 1.0
 # Why "hidden"? These models work but are not advertised by Kiro's /ListAvailableModels.
 # We expose them to our users because they're useful.
 HIDDEN_MODELS: Dict[str, str] = {
-    # Claude 3.7 Sonnet - legacy model, maps to "auto" on new runtime endpoint
-    # "claude-3.7-sonnet": "auto",
+    # Claude 3.7 Sonnet - legacy model, maps to "claude-sonnet-4.6"
+    "claude-3.7-sonnet": "claude-sonnet-4.6",
+    # Claude 3.5 Sonnet - legacy model, maps to "claude-sonnet-4"
+    "claude-3.5-sonnet": "claude-sonnet-4",
+    # Claude 3.7 Opus - legacy model, maps to "claude-opus-4.7"
+    "claude-3.7-opus": "claude-opus-4.7",
+    # Claude 3.6 Opus - legacy model, maps to "claude-opus-4.6"
+    "claude-3.6-opus": "claude-opus-4.6",
+    # Claude 3.5 Opus - legacy model, maps to "claude-opus-4.5"
+    "claude-3.5-opus": "claude-opus-4.5",
+    # Claude 3.5 Haiku - legacy model, maps to "claude-haiku-4.5"
+    "claude-3.5-haiku": "claude-haiku-4.5",
 }
 
 # ==================================================================================================

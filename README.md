@@ -105,6 +105,36 @@ python main.py --port 9000
 
 The server will be available at `http://localhost:8000`
 
+### OpenCode Auto-Start
+
+If you use OpenCode with this gateway, run OpenCode through the helper script so the gateway starts automatically and stays in the background until the process exits or the computer shuts down:
+
+```bash
+python scripts/ensure_gateway.py -- opencode
+```
+
+The helper is safe to call before every OpenCode run:
+
+- If `http://127.0.0.1:8000/health` is already healthy, it does not start a duplicate server.
+- If the gateway is not running, it launches `python main.py --host 127.0.0.1 --port 8000` as a detached background process.
+- Runtime files are written under `.kiro-gateway/` in the project directory and ignored by Git.
+
+Use a shell alias if you want this every time:
+
+```bash
+alias opencode-kiro='cd /path/to/kiro-gateway && python scripts/ensure_gateway.py -- opencode'
+```
+
+Customize the gateway path, host, or port when needed:
+
+```bash
+python /path/to/kiro-gateway/scripts/ensure_gateway.py \
+  --gateway-dir /path/to/kiro-gateway \
+  --host 127.0.0.1 \
+  --port 9000 \
+  -- opencode
+```
+
 ---
 
 ## ⚙️ Configuration

@@ -432,6 +432,10 @@ class TestNormalizeModelNameParametrized:
         # Legacy format
         ("claude-3-7-sonnet", "claude-3.7-sonnet"),
         ("claude-3-7-sonnet-20250219", "claude-3.7-sonnet"),
+        ("claude-3-5-sonnet", "claude-3.5-sonnet"),
+        ("claude-3-7-opus", "claude-3.7-opus"),
+        ("claude-3-6-opus", "claude-3.6-opus"),
+        ("claude-3-5-opus", "claude-3.5-opus"),
         ("claude-3-5-haiku", "claude-3.5-haiku"),
         ("claude-3-0-opus", "claude-3.0-opus"),
         # Already normalized
@@ -1738,3 +1742,40 @@ class TestAliasSystemSecurity:
         print(f"Received suggestions: {suggestions}")
         # This is expected behavior - alias name doesn't contain family
         assert len(suggestions) > 0
+
+
+class TestProductionLegacyModelMappings:
+    """
+    Tests active production legacy-to-latest model mapping.
+    
+    Verifies that real mappings defined in kiro.config.HIDDEN_MODELS
+    work seamlessly for various input formats.
+    """
+
+    def test_production_mappings_resolution(self):
+        """
+        What it does: Validates that every configured legacy model in HIDDEN_MODELS
+        correctly translates to the respective newer production Kiro API model ID.
+        """
+        from kiro.config import HIDDEN_MODELS
+
+        print(f"Active HIDDEN_MODELS mappings: {HIDDEN_MODELS}")
+
+        # Check Sonnet mappings
+        assert get_model_id_for_kiro("claude-3.7-sonnet", HIDDEN_MODELS) == "claude-sonnet-4.6"
+        assert get_model_id_for_kiro("claude-3-7-sonnet", HIDDEN_MODELS) == "claude-sonnet-4.6"
+        assert get_model_id_for_kiro("claude-3.5-sonnet", HIDDEN_MODELS) == "claude-sonnet-4"
+        assert get_model_id_for_kiro("claude-3-5-sonnet", HIDDEN_MODELS) == "claude-sonnet-4"
+
+        # Check Opus mappings
+        assert get_model_id_for_kiro("claude-3.7-opus", HIDDEN_MODELS) == "claude-opus-4.7"
+        assert get_model_id_for_kiro("claude-3-7-opus", HIDDEN_MODELS) == "claude-opus-4.7"
+        assert get_model_id_for_kiro("claude-3.6-opus", HIDDEN_MODELS) == "claude-opus-4.6"
+        assert get_model_id_for_kiro("claude-3-6-opus", HIDDEN_MODELS) == "claude-opus-4.6"
+        assert get_model_id_for_kiro("claude-3.5-opus", HIDDEN_MODELS) == "claude-opus-4.5"
+        assert get_model_id_for_kiro("claude-3-5-opus", HIDDEN_MODELS) == "claude-opus-4.5"
+
+        # Check Haiku mappings
+        assert get_model_id_for_kiro("claude-3.5-haiku", HIDDEN_MODELS) == "claude-haiku-4.5"
+        assert get_model_id_for_kiro("claude-3-5-haiku", HIDDEN_MODELS) == "claude-haiku-4.5"
+
