@@ -400,10 +400,10 @@ class TestServerHostConfig:
 class TestServerPortConfig:
     """Tests for SERVER_PORT configuration."""
     
-    def test_default_server_port_is_8000(self):
+    def test_default_server_port_is_8888(self):
         """
-        What it does: Verifies that SERVER_PORT defaults to 8000.
-        Purpose: Ensure that 8000 is used when no environment variable is set.
+        What it does: Verifies that SERVER_PORT defaults to 8888.
+        Purpose: Ensure that 8888 is used when no environment variable is set.
         """
         print("Setup: Removing SERVER_PORT from environment...")
         
@@ -417,9 +417,9 @@ class TestServerPortConfig:
             
             print(f"SERVER_PORT: {config_module.SERVER_PORT}")
             print(f"DEFAULT_SERVER_PORT: {config_module.DEFAULT_SERVER_PORT}")
-            print(f"Comparing: Expected 8000, Got {config_module.SERVER_PORT}")
-            assert config_module.SERVER_PORT == 8000
-            assert config_module.DEFAULT_SERVER_PORT == 8000
+            print(f"Comparing: Expected 8888, Got {config_module.SERVER_PORT}")
+            assert config_module.SERVER_PORT == 8888
+            assert config_module.DEFAULT_SERVER_PORT == 8888
     
     def test_server_port_from_environment(self):
         """
@@ -583,6 +583,7 @@ class TestFallbackModelsConfig:
         print("Verification: Contains at least one Claude model...")
         has_claude = any("claude" in mid.lower() for mid in model_ids)
         assert has_claude, "No Claude models in fallback list"
+        assert "claude-opus-4.8" in model_ids
     
     def test_fallback_models_use_dot_format(self):
         """
@@ -635,6 +636,7 @@ class TestFallbackModelsIntegration:
         # Test that dash format (claude-opus-4-5) is normalized and found
         test_cases = [
             ("claude-opus-4-5", "claude-opus-4.5"),  # Dash → Dot
+            ("claude-opus-4-8", "claude-opus-4.8"),  # Dash → Dot
             ("claude-sonnet-4-5", "claude-sonnet-4.5"),  # Dash → Dot
             ("claude-haiku-4-5", "claude-haiku-4.5"),  # Dash → Dot
         ]

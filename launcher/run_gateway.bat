@@ -1,4 +1,4 @@
 @echo off
 cd /d "%~dp0"
-start "" wscript.exe run_gateway.vbs
-exit
+start "" wscript.exe "%~dp0run_gateway.vbs"
+exit /b 0

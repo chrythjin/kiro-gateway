@@ -85,10 +85,10 @@ def _get_raw_env_value(var_name: str, env_file: str = ".env") -> Optional[str]:
 DEFAULT_SERVER_HOST: str = "0.0.0.0"
 SERVER_HOST: str = os.getenv("SERVER_HOST", DEFAULT_SERVER_HOST)
 
-# Server port (default: 8000)
+# Server port (default: 8888)
 # Can be overridden by CLI: python main.py --port 9000
 # Or by uvicorn directly: uvicorn main:app --port 9000
-DEFAULT_SERVER_PORT: int = 8000
+DEFAULT_SERVER_PORT: int = 8888
 SERVER_PORT: int = int(os.getenv("SERVER_PORT", str(DEFAULT_SERVER_PORT)))
 
 # ==================================================================================================
@@ -282,6 +282,7 @@ FALLBACK_MODELS: List[Dict[str, str]] = [
     {"modelId": "claude-opus-4.5"},
     {"modelId": "claude-opus-4.6"},
     {"modelId": "claude-opus-4.7"},
+    {"modelId": "claude-opus-4.8"},
     {"modelId": "deepseek-3.2"},
     {"modelId": "glm-5"},
     {"modelId": "minimax-m2.1"},
@@ -376,9 +377,11 @@ FIRST_TOKEN_MAX_RETRIES: int = int(os.getenv("FIRST_TOKEN_MAX_RETRIES", "3"))
 _DEBUG_MODE_RAW: str = os.getenv("DEBUG_MODE", "").lower()
 
 if _DEBUG_MODE_RAW in ("off", "errors", "all"):
-    DEBUG_MODE: str = _DEBUG_MODE_RAW
+    _debug_mode: str = _DEBUG_MODE_RAW
 else:
-    DEBUG_MODE: str = "off"
+    _debug_mode = "off"
+
+DEBUG_MODE: str = _debug_mode
 
 # Directory for debug log files
 DEBUG_DIR: str = os.getenv("DEBUG_DIR", "debug_logs")
@@ -462,9 +465,11 @@ FAKE_REASONING_BUDGET_CAP: int = int(os.getenv("FAKE_REASONING_BUDGET_CAP", "100
 # Default: "as_reasoning_content"
 _FAKE_REASONING_HANDLING_RAW: str = os.getenv("FAKE_REASONING_HANDLING", "as_reasoning_content").lower()
 if _FAKE_REASONING_HANDLING_RAW in ("as_reasoning_content", "remove", "pass", "strip_tags"):
-    FAKE_REASONING_HANDLING: str = _FAKE_REASONING_HANDLING_RAW
+    _fake_reasoning_handling: str = _FAKE_REASONING_HANDLING_RAW
 else:
-    FAKE_REASONING_HANDLING: str = "as_reasoning_content"
+    _fake_reasoning_handling = "as_reasoning_content"
+
+FAKE_REASONING_HANDLING: str = _fake_reasoning_handling
 
 # List of opening tags to detect thinking blocks.
 # The parser will look for any of these tags at the start of the response.
@@ -578,4 +583,3 @@ def get_kiro_api_host(region: str) -> str:
 def get_kiro_q_host(region: str) -> str:
     """Return Q API host for the specified region."""
     return KIRO_Q_HOST_TEMPLATE.format(region=region)
-
