@@ -126,9 +126,12 @@ def load_credentials_from_sqlite(db_path: str) -> bool:
         conn = sqlite3.connect(str(path))
         cursor = conn.cursor()
         
-        # Load token data (try both kiro-cli and codewhisperer key formats)
-        cursor.execute("SELECT value FROM auth_kv WHERE key = ?", ("kirocli:odic:token",))
+        # Load token data (try social, odic, and codewhisperer key formats)
+        cursor.execute("SELECT value FROM auth_kv WHERE key = ?", ("kirocli:social:token",))
         token_row = cursor.fetchone()
+        if not token_row:
+            cursor.execute("SELECT value FROM auth_kv WHERE key = ?", ("kirocli:odic:token",))
+            token_row = cursor.fetchone()
         if not token_row:
             cursor.execute("SELECT value FROM auth_kv WHERE key = ?", ("codewhisperer:odic:token",))
             token_row = cursor.fetchone()
